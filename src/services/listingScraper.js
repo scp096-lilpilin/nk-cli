@@ -30,36 +30,59 @@ import { onShutdown } from '../utils/shutdown.js';
  * Wait for the `.nk-search-results` container — the hard signal that the
  * listing DOM is rendered and not stuck on a WAF challenge page.
  *
+ * Uses the WAF-grade timeout (rather than the regular navigation
+ * timeout) so a slow first-load challenge does not poison the wait.
+ *
  * @param {import('puppeteer').Page} page Page navigated to a listing URL.
  * @returns {Promise<void>} Resolves when the selector appears.
  */
 async function waitForListingDom(page) {
   await page.waitForSelector('.nk-search-results li', {
-    timeout: config.browser.navigationTimeoutMs,
+    timeout: config.browser.wafTimeoutMs,
   });
 }
 
 /**
  * Navigate from the homepage to the Hentai category landing page.
  *
+ * Sequence:
+ *   1. `goto(home, networkidle2)` — gives the SafeLine WAF challenge
+ *      time to finish (it auto-redirects to the real homepage once
+ *      satisfied), so we never start polling for the menu link while
+ *      still on the interstitial page.
+ *   2. `waitForFunction(... === 'hentai')` with the dedicated WAF
+ *      timeout — defaults to 120s but is env-tunable. Once the link
+ *      is rendered the wait resolves immediately.
+ *   3. Click + waitForNavigation onto `/category/hentai/` and assert
+ *      the listing DOM (also via the WAF timeout for safety).
+ *
  * @param {import('puppeteer').Page} page Configured Puppeteer page.
  * @returns {Promise<void>} Resolves once the listing DOM is rendered.
  */
 async function enterHentaiCategory(page) {
   logger.info('Opening homepage', { url: config.homeUrl });
-  await page.goto(config.homeUrl, { waitUntil: 'domcontentloaded' });
+  await page.goto(config.homeUrl, {
+    waitUntil: 'networkidle2',
+    timeout: config.browser.wafTimeoutMs,
+  });
 
+  logger.debug('Waiting for Hentai menu link', {
+    timeoutMs: config.browser.wafTimeoutMs,
+  });
   await page.waitForFunction(
     () =>
       [...document.querySelectorAll('li > a')].some(
         (anchor) => anchor.textContent?.toLowerCase().trim() === 'hentai',
       ),
-    { timeout: config.browser.navigationTimeoutMs },
+    { timeout: config.browser.wafTimeoutMs, polling: 250 },
   );
 
   logger.info('Clicking Hentai menu');
   await Promise.all([
-    page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    page.waitForNavigation({
+      waitUntil: 'domcontentloaded',
+      timeout: config.browser.wafTimeoutMs,
+    }),
     page.evaluate(clickHentaiMenu),
   ]);
 
