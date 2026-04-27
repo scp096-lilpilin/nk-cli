@@ -15,7 +15,8 @@
     "scrape": "node main.js",
     "scrape:list": "node main.js --only=list",
     "scrape:detail": "node main.js --only=detail",
-    "lint:syntax": "node --check main.js && find src -name '*.js' -print -exec node --check {} \\;"
+    "lint:syntax": "node --check main.js && find src -name '*.js' -print -exec node --check {} \\;",
+    "test": "node --test --test-reporter=spec \"test/**/*.test.js\""
   },
   "dependencies": {
     "dotenv": "^16.4.5",
