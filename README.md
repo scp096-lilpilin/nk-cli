@@ -110,6 +110,9 @@ Available variables:
 | `NK_RETRY_BASE_DELAY_MS` | `2500` | Base backoff delay (doubled each retry). |
 | `NK_POLITE_DELAY_MS` | `800` | Pause between successful requests. |
 | `NK_LOG_LEVEL` | `info` | One of `debug`, `info`, `warn`, `error`. |
+| `NK_OUTPUT_DIR` | `output` | Where `hanimeLists.json` / `hanimeDetails.json` are written. |
+| `NK_LOGS_DIR` | `logs` | Where the daily logger writes log files. |
+| `NK_USER_DATA_DIR` | `.browser_data` | Persistent Puppeteer profile directory. |
 | `NK_CHROME_EXECUTABLE_PATH` | _(unset)_ | Path to a real Chrome/Chromium binary. Bundled Chromium has fingerprint quirks; a real Chrome is harder for WAFs to flag. |
 | `NK_CHROME_CHANNEL` | _(unset)_ | Puppeteer browser channel hint (e.g. `chrome`). |
 | `REBROWSER_PATCHES_RUNTIME_FIX_MODE` | `addBinding` | rebrowser-patches `Runtime.Enable` fix mode. Other values: `alwaysIsolated`, `0` (disabled). |
@@ -122,6 +125,28 @@ Available variables:
 - `output/hanimeDetails.json` — final merged detail records.
 - `output/hanimeDetails.progress.json` — per-slug checkpoint file used
   to resume an interrupted detail run.
+
+## Tests
+
+The repository ships with a `node:test`-based suite that covers the
+four DOM parsers and runs the listing + detail scrapers end-to-end
+against a local fixture HTTP server (no live network required):
+
+```bash
+npm test
+```
+
+The integration test uses `NK_OUTPUT_DIR` to redirect output into a
+temp directory, so it does not touch the real `output/` JSON files.
+It asserts that:
+
+- `output/hanimeLists.json` contains **at least 10** listing entries.
+- `output/hanimeDetails.json` contains **at least 10** detail records,
+  each merging the parsed `content`, `player` and `downloads` blocks.
+
+Fixtures live under `test/fixtures/`. To validate a parser change
+against a real captured page, drop the page's HTML into a fixture and
+add an assertion in `test/parsers.test.js`.
 
 ## Reliability Notes
 

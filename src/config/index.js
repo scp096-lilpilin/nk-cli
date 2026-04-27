@@ -16,6 +16,23 @@ const projectRoot = path.resolve(
 );
 
 /**
+ * Resolve an environment-supplied path (relative resolved against the
+ * project root) or fall back to a project-relative default.
+ *
+ * @param {string | undefined} value Raw env value.
+ * @param {string[]} fallback Path segments under the project root.
+ * @returns {string} Absolute filesystem path.
+ */
+function pathEnv(value, fallback) {
+  if (value && value.trim()) {
+    return path.isAbsolute(value)
+      ? value
+      : path.resolve(projectRoot, value);
+  }
+  return path.join(projectRoot, ...fallback);
+}
+
+/**
  * Parse an environment variable as a positive integer, falling back to a default.
  *
  * @param {string | undefined} value Raw environment value.
@@ -69,6 +86,10 @@ function boolEnv(value, fallback) {
  * @property {number} scrape.politeDelayMs Pause between successful requests.
  */
 
+const outputDir = pathEnv(process.env.NK_OUTPUT_DIR, ['output']);
+const logsDir = pathEnv(process.env.NK_LOGS_DIR, ['logs']);
+const userDataDir = pathEnv(process.env.NK_USER_DATA_DIR, ['.browser_data']);
+
 /** @type {ScraperConfig} */
 export const config = Object.freeze({
   baseUrl: process.env.NK_BASE_URL ?? 'https://nekopoi.care',
@@ -79,16 +100,12 @@ export const config = Object.freeze({
       '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
   paths: Object.freeze({
     root: projectRoot,
-    output: path.join(projectRoot, 'output'),
-    logs: path.join(projectRoot, 'logs'),
-    listingFile: path.join(projectRoot, 'output', 'hanimeLists.json'),
-    detailFile: path.join(projectRoot, 'output', 'hanimeDetails.json'),
-    detailProgressFile: path.join(
-      projectRoot,
-      'output',
-      'hanimeDetails.progress.json',
-    ),
-    userDataDir: path.join(projectRoot, '.browser_data'),
+    output: outputDir,
+    logs: logsDir,
+    listingFile: path.join(outputDir, 'hanimeLists.json'),
+    detailFile: path.join(outputDir, 'hanimeDetails.json'),
+    detailProgressFile: path.join(outputDir, 'hanimeDetails.progress.json'),
+    userDataDir,
   }),
   browser: Object.freeze({
     headless: boolEnv(process.env.NK_HEADLESS, true),

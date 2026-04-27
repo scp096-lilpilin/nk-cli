@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Detail (fixture)</title>
+</head>
+<body>
+  <article>
+    <header class="nk-post-header">
+      <h1>Fixture Detail Title</h1>
+      <div class="nk-post-header-meta">
+        <span class="dashicons-visibility"></span>1,234 views
+        <span class="dashicons-calendar-alt"></span>27 April 2026
+      </div>
+    </header>
+
+    <div class="konten">
+      <h3>Sinopsis</h3>
+      <p>This is a long-form synopsis used by the contentBody parser. It needs to be longer than eighty characters so the heuristic fires and treats it as the synopsis text.</p>
+      <p>Genre: Drama, Action, Romance.</p>
+      <p>Producers: Acme Studio, Beta Productions</p>
+      <p>Duration: 24 min</p>
+      <p>Size: 720P : 312.5 MB, 1080P : 612.0 MB</p>
+      <p>Catatan: Fixture file for nk-cli unit tests.</p>
+    </div>
+
+    <section id="nk-player">
+      <div class="nk-section-header"><h1>Streaming Player</h1></div>
+      <div id="nk-player-tabs">
+        <a href="#nk-stream-1">Mirror 1</a>
+        <a href="#nk-stream-2">Mirror 2</a>
+      </div>
+      <div id="nk-stream-1">
+        <iframe src="https://example.test/embed/mirror1" width="640" height="360" allowfullscreen></iframe>
+      </div>
+      <div id="nk-stream-2">
+        <iframe src="https://example.test/embed/mirror2" width="640" height="360"></iframe>
+      </div>
+      <a class="nk-episode-prev" href="https://example.test/prev/">Previous Episode</a>
+      <a class="nk-episode-next" href="https://example.test/next/">Next Episode</a>
+    </section>
+
+    <section class="nk-download-section">
+      <div class="nk-download-row">
+        <div class="nk-download-name">Fixture Detail Title [720p]</div>
+        <div class="nk-download-links">
+          <a href="https://example.test/dl/720/mega">Mega</a>
+          <a href="https://example.test/dl/720/pixeldrain">Pixeldrain</a>
+        </div>
+      </div>
+      <div class="nk-download-row">
+        <div class="nk-download-name">Fixture Detail Title [1080p]</div>
+        <div class="nk-download-links">
+          <a href="https://example.test/dl/1080/mega">Mega</a>
+        </div>
+      </div>
+    </section>
+  </article>
+</body>
+</html>
