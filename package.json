@@ -19,6 +19,7 @@
     "test": "node --test --test-reporter=spec \"test/**/*.test.js\""
   },
   "dependencies": {
+    "chalk": "^5.6.2",
     "dotenv": "^16.4.5",
     "puppeteer": "npm:rebrowser-puppeteer@^23.10.3",
     "puppeteer-extra": "^3.3.6",

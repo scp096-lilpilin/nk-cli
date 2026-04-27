@@ -57,6 +57,39 @@ function boolEnv(value, fallback) {
 }
 
 /**
+ * Parse a comma- or space-separated list of resource types to block at
+ * the request-interception layer. Unknown tokens are silently dropped.
+ *
+ * @param {string | undefined} value Raw environment value.
+ * @param {string[]} fallback Default list when `value` is missing.
+ * @returns {string[]} Lowercase, deduplicated list of resource types.
+ */
+function resourceListEnv(value, fallback) {
+  const known = new Set([
+    'document',
+    'stylesheet',
+    'image',
+    'media',
+    'font',
+    'script',
+    'texttrack',
+    'xhr',
+    'fetch',
+    'eventsource',
+    'websocket',
+    'manifest',
+    'other',
+  ]);
+  if (!value) return [...fallback];
+  if (value.trim().toLowerCase() === 'none') return [];
+  const tokens = value
+    .split(/[\s,]+/)
+    .map((token) => token.trim().toLowerCase())
+    .filter((token) => known.has(token));
+  return [...new Set(tokens)];
+}
+
+/**
  * Immutable configuration consumed by every module.
  *
  * @typedef {object} ScraperConfig
@@ -76,8 +109,10 @@ function boolEnv(value, fallback) {
  * @property {number} browser.viewportWidth Default viewport width.
  * @property {number} browser.viewportHeight Default viewport height.
  * @property {number} browser.navigationTimeoutMs Default navigation timeout.
+ * @property {number} browser.wafTimeoutMs Generous wait used when the WAF challenge gates the real DOM.
  * @property {string|null} browser.executablePath Optional path to a real Chrome/Chromium binary.
  * @property {string} browser.channel Puppeteer browser channel hint (e.g. "chrome").
+ * @property {string[]} browser.blockedResourceTypes Puppeteer resource types aborted before they hit the network.
  * @property {object} scrape Behavioural tuning for scrape loops.
  * @property {number} scrape.maxListingPages Hard cap on listing pages.
  * @property {number} scrape.maxDetailItems Hard cap on detail pages (0 = no cap).
@@ -112,8 +147,12 @@ export const config = Object.freeze({
     viewportWidth: intEnv(process.env.NK_VIEWPORT_WIDTH, 1366),
     viewportHeight: intEnv(process.env.NK_VIEWPORT_HEIGHT, 768),
     navigationTimeoutMs: intEnv(process.env.NK_NAV_TIMEOUT_MS, 60_000),
+    wafTimeoutMs: intEnv(process.env.NK_WAF_TIMEOUT_MS, 120_000),
     executablePath: process.env.NK_CHROME_EXECUTABLE_PATH ?? null,
     channel: process.env.NK_CHROME_CHANNEL ?? '',
+    blockedResourceTypes: Object.freeze(
+      resourceListEnv(process.env.NK_BLOCK_RESOURCES, ['image', 'media', 'font']),
+    ),
   }),
   scrape: Object.freeze({
     maxListingPages: intEnv(process.env.NK_MAX_LIST_PAGES, 9999),

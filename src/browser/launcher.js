@@ -160,9 +160,41 @@ function antiDetectionShim() {
 }
 
 /**
+ * Install the resource-blocker that aborts heavy media before it hits
+ * the network. The scraper only needs the rendered HTML, so images,
+ * video and fonts are pure overhead — blocking them keeps a single
+ * detail page well under 1 MB and trims navigation time noticeably.
+ *
+ * No-op when `config.browser.blockedResourceTypes` is empty (set
+ * `NK_BLOCK_RESOURCES=none` to disable).
+ *
+ * @param {import('puppeteer').Page} page Page to configure.
+ * @returns {Promise<void>} Resolves once interception is wired up.
+ */
+async function installResourceBlocker(page) {
+  const blocked = new Set(config.browser.blockedResourceTypes);
+  if (blocked.size === 0) return;
+
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    if (request.isInterceptResolutionHandled()) return;
+    if (blocked.has(request.resourceType())) {
+      request.abort('blockedbyclient').catch(() => undefined);
+      return;
+    }
+    request.continue().catch(() => undefined);
+  });
+
+  logger.debug('Resource blocker installed', {
+    blocked: [...blocked],
+  });
+}
+
+/**
  * Open a new page with sensible defaults: realistic UA, accept-language,
- * navigation timeout, and the {@link antiDetectionShim} hook installed
- * before any page script runs.
+ * navigation timeout, the {@link antiDetectionShim} hook installed
+ * before any page script runs, and a resource blocker that aborts
+ * media/font requests we never need to parse.
  *
  * @param {import('puppeteer').Browser} browser Browser returned by {@link launchBrowser}.
  * @returns {Promise<import('puppeteer').Page>} A configured page object.
@@ -175,6 +207,7 @@ export async function newConfiguredPage(browser) {
   page.setDefaultTimeout(config.browser.navigationTimeoutMs);
 
   await page.evaluateOnNewDocument(antiDetectionShim);
+  await installResourceBlocker(page);
 
   return page;
 }

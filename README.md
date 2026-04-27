@@ -19,6 +19,18 @@ as a normal browser would.
   graceful fallback to bare `puppeteer` if the plugin is unavailable.
 - ES Module project (`"type": "module"`), 2-space indentation, JSDoc on
   every exported function.
+- **Bandwidth-efficient navigation**: Puppeteer request interception
+  aborts `image | media | font` requests by default
+  (`NK_BLOCK_RESOURCES`), so each page loads only the HTML/CSS/JS the
+  parsers actually need.
+- **WAF-aware waits**: the homepage `goto` uses `networkidle2` and a
+  separate `NK_WAF_TIMEOUT_MS` (default 120s) gates the
+  `Hentai`-link / listing / detail DOM checks. The wait resolves the
+  moment the challenge clears, so steady-state navigation is unaffected.
+- **Coloured local-time logs** via [`chalk`](https://www.npmjs.com/package/chalk).
+  Terminal output uses local-clock timestamps
+  (`YYYY-MM-DD HH:mm:ss.SSS`) and per-level colours; file logs stay
+  plain text.
 - Resume-friendly: every page checkpoint is written atomically; SIGINT,
   SIGTERM, uncaught exceptions and unhandled rejections all flush
   in-flight progress before exit.
@@ -104,12 +116,15 @@ Available variables:
 | `NK_VIEWPORT_WIDTH` | `1366` | Default viewport width. |
 | `NK_VIEWPORT_HEIGHT` | `768` | Default viewport height. |
 | `NK_NAV_TIMEOUT_MS` | `60000` | Navigation/selector timeout. |
+| `NK_WAF_TIMEOUT_MS` | `120000` | Generous wait for the SafeLine WAF challenge gate (homepage entry, Hentai-link wait, listing/detail DOM). Resolves immediately once the gate clears. |
+| `NK_BLOCK_RESOURCES` | `image,media,font` | Comma-separated resource types aborted at the request layer (allowed: `document`, `stylesheet`, `image`, `media`, `font`, `script`, `texttrack`, `xhr`, `fetch`, `eventsource`, `websocket`, `manifest`, `other`). Set to `none` to disable. |
 | `NK_MAX_LIST_PAGES` | `9999` | Hard cap on listing pages. |
 | `NK_MAX_DETAIL_ITEMS` | `0` (no cap) | Hard cap on detail pages per run. |
 | `NK_RETRY_ATTEMPTS` | `3` | Retries per page before skipping. |
 | `NK_RETRY_BASE_DELAY_MS` | `2500` | Base backoff delay (doubled each retry). |
 | `NK_POLITE_DELAY_MS` | `800` | Pause between successful requests. |
 | `NK_LOG_LEVEL` | `info` | One of `debug`, `info`, `warn`, `error`. |
+| `NK_LOG_COLOR` | _(auto)_ | Force ANSI colour on/off in terminal output. Defaults to on when stdout is a TTY. File logs are always plain text. |
 | `NK_OUTPUT_DIR` | `output` | Where `hanimeLists.json` / `hanimeDetails.json` are written. |
 | `NK_LOGS_DIR` | `logs` | Where the daily logger writes log files. |
 | `NK_USER_DATA_DIR` | `.browser_data` | Persistent Puppeteer profile directory. |

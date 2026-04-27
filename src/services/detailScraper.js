@@ -65,7 +65,7 @@ async function waitForDetailDom(page) {
           document.querySelector('#nk-player') ||
           document.querySelector('.nk-download-section'),
       ),
-    { timeout: config.browser.navigationTimeoutMs },
+    { timeout: config.browser.wafTimeoutMs, polling: 250 },
   );
 }
 
